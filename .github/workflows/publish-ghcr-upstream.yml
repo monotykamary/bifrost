@@ -163,7 +163,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./transports/Dockerfile
+          # Use local workspace modules so upstream+improvements includes unreleased core/framework/plugin changes.
+          file: ./transports/Dockerfile.local
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
