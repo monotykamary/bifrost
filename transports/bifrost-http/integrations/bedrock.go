@@ -29,6 +29,27 @@ const (
 	s3ContextKeyMaxKeys = schemas.BifrostContextKey("s3_max_keys")
 )
 
+// bedrockCountTokensRequest/Response are local compatibility shims for transport builds
+// when the pinned core module version does not expose Bedrock count-tokens helper types.
+type bedrockCountTokensRequest struct {
+	Input struct {
+		Converse *bedrock.BedrockConverseRequest `json:"converse,omitempty"`
+	} `json:"input"`
+}
+
+type bedrockCountTokensResponse struct {
+	InputTokens int `json:"inputTokens"`
+}
+
+func toBedrockCountTokensResponse(resp *schemas.BifrostCountTokensResponse) *bedrockCountTokensResponse {
+	if resp == nil {
+		return nil
+	}
+	return &bedrockCountTokensResponse{
+		InputTokens: resp.InputTokens,
+	}
+}
+
 // createBedrockConverseRouteConfig creates a route configuration for the Bedrock Converse API endpoint
 // Handles POST /bedrock/model/{modelId}/converse
 func createBedrockConverseRouteConfig(pathPrefix string, handlerStore lib.HandlerStore) RouteConfig {
@@ -235,13 +256,13 @@ func createBedrockCountTokensRouteConfig(pathPrefix string, handlerStore lib.Han
 		Path:   pathPrefix + "/model/{modelId}/count-tokens",
 		Method: "POST",
 		GetRequestTypeInstance: func(ctx context.Context) interface{} {
-			return &bedrock.BedrockCountTokensRequest{}
+			return &bedrockCountTokensRequest{}
 		},
 		GetHTTPRequestType: func(ctx *fasthttp.RequestCtx) schemas.RequestType {
 			return schemas.CountTokensRequest
 		},
 		RequestConverter: func(ctx *schemas.BifrostContext, req interface{}) (*schemas.BifrostRequest, error) {
-			if countTokensReq, ok := req.(*bedrock.BedrockCountTokensRequest); ok {
+			if countTokensReq, ok := req.(*bedrockCountTokensRequest); ok {
 				if countTokensReq.Input.Converse == nil {
 					return nil, errors.New("input.converse is required for count-tokens")
 				}
@@ -256,7 +277,7 @@ func createBedrockCountTokensRouteConfig(pathPrefix string, handlerStore lib.Han
 			return nil, errors.New("invalid request type for Bedrock count tokens")
 		},
 		CountTokensResponseConverter: func(ctx *schemas.BifrostContext, resp *schemas.BifrostCountTokensResponse) (interface{}, error) {
-			return bedrock.ToBedrockCountTokensResponse(resp), nil
+			return toBedrockCountTokensResponse(resp), nil
 		},
 		ErrorConverter: func(ctx *schemas.BifrostContext, err *schemas.BifrostError) interface{} {
 			return bedrock.ToBedrockError(err)
@@ -1170,7 +1191,7 @@ func bedrockPreCallback(handlerStore lib.HandlerStore) func(ctx *fasthttp.Reques
 			r.ModelID = fullModelID
 		case *bedrock.BedrockTextCompletionRequest:
 			r.ModelID = fullModelID
-		case *bedrock.BedrockCountTokensRequest:
+		case *bedrockCountTokensRequest:
 			if r.Input.Converse != nil {
 				r.Input.Converse.ModelID = fullModelID
 			}
