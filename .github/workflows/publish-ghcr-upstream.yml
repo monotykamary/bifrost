@@ -85,6 +85,8 @@ jobs:
             VERSION=${{ steps.prep.outputs.version }}
           tags: ${{ steps.prep.outputs.tags }}
           labels: ${{ steps.prep.outputs.labels }}
+          cache-from: type=gha,scope=publish-ghcr-upstream
+          cache-to: type=gha,mode=max,scope=publish-ghcr-upstream
 
   build-upstream-improvements:
     runs-on: ubuntu-latest
@@ -168,3 +170,5 @@ jobs:
             VERSION=${{ steps.prep.outputs.version }}
           tags: ${{ steps.prep.outputs.tags }}
           labels: ${{ steps.prep.outputs.labels }}
+          cache-from: type=gha,scope=publish-ghcr-upstream-improvements
+          cache-to: type=gha,mode=max,scope=publish-ghcr-upstream-improvements

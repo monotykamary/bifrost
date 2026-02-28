@@ -938,6 +938,8 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.tags }}
           platforms: linux/amd64
+          cache-from: type=gha,scope=release-docker-amd64
+          cache-to: type=gha,mode=max,scope=release-docker-amd64
 
   # Docker build arm64
   docker-build-arm64:
@@ -1009,6 +1011,8 @@ jobs:
             VERSION=${{ needs.detect-changes.outputs.transport-version }}
           tags: ${{ steps.tags.outputs.tags }}
           platforms: linux/arm64
+          cache-from: type=gha,scope=release-docker-arm64
+          cache-to: type=gha,mode=max,scope=release-docker-arm64
 
   # Docker manifest
   docker-manifest:
